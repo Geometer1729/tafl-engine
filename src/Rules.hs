@@ -124,5 +124,8 @@ spaces (s,d) = let
               in [fromPair (x,sy) | x <- [l..r] ]
           | otherwise -> error "spaces called with illegal move"
 
+checkWin :: Position -> Maybe Result
+checkWin = undefined
+
 doAgentStep :: Position -> Position
 doAgentStep = undefined

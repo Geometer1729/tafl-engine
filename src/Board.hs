@@ -13,6 +13,8 @@ data Piece = V | B | W | A deriving(Enum,Eq,Ord)
 
 type Board = Array Coord Piece
 
+data Result = Win1 | Win2 | Draw
+
 data Position = Position{
   posBoard :: Board,
   posAgent :: Coord,
@@ -38,10 +40,10 @@ showPiece W = 'W'
 showPiece A = 'A'
 
 showBoard :: Position -> String
-showBoard p = let board = Data.Array.elems $ posBoard p
+showBoard pos = let board = Data.Array.elems $ posBoard pos
               in intercalate "\n" $ [[showPiece p | p <- row] | row <- chunksOf 11 board]
 
-startBoard :: Array Coord Piece 
+startBoard :: Array Coord Piece
 startBoard = array (0,120) $ zip [Coord c | c <- [0..120]] [B,V,V,V,W,B,W,V,V,V,B,B,V,V,V,W,B,W,V,V,V,B,V,V,V,V,V,V,V,V,V,V,V,V,W,V,V,V,V,V,V,V,W,V,B,B,V,V,V,V,V,V,V,B,B,B,B,V,V,V,A,V,V,V,B,B,B,B,V,V,V,V,V,V,V,B,B,V,W,V,V,V,V,V,V,V,W,V,V,V,V,V,V,V,V,V,V,V,V,B,V,V,V,W,B,W,V,V,V,B,B,V,V,V,W,B,W,V,V,V,B] {-[
         B, B, V, V, B, B, B, V, V, B, B, --10
         V, V, V, W, B, B, B, W, V, V, V, --21
@@ -61,3 +63,6 @@ startPosition = Position{posBoard = startBoard, posAgent=60,posConflicts=empty}
 
 instance Show Position where
     show = showBoard
+
+posFlip :: Position -> Position
+posFlip = undefined
