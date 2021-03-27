@@ -79,29 +79,53 @@ doMoves mv1 mv2 pos@Position{posBoard=board} = case findConflict mv1 mv2 of
                                           (sr,_) = r
                                           lblocks = blocks board l
                                           rblocks = blocks board r
-                                          lblocked  = not . null $ lblocks
-                                          lblocked' = any (/= sr)  lblocks
-                                          rblocked  = not . null $ rblocks
-                                          rblocked' = any (/= sl)  rblocks
-                                          moves = case (lblocked,lblocked',rblocked,rblocked') of
-                                                (True,True,True,True)   -> []
-                                                (True,True,True,False)  -> undefined
-                                                _ -> undefined
+                                          lblock  = if| null lblocks        -> None
+                                                      | any (/= sr) lblocks -> Hard
+                                                      | otherwise           -> Soft
+                                          rblock = if| null rblocks         -> None
+                                                      | any (/= sl) rblocks -> Hard
+                                                      | otherwise           -> Soft
+                                          both = [l,r]
+                                          moves = case (lblock,rblock) of
+                                              (None,None) -> both
+                                              (None,Soft) -> both
+                                              (None,Hard) -> [l]
+                                              (Soft,None) -> both
+                                              (Soft,Soft) -> both
+                                              (Soft,Hard) -> []
+                                              (Hard,None) -> [r]
+                                              (Hard,_)    -> []
                                               in finish $ doMovesBlind moves pos
 
 
+data Block = None | Soft | Hard
+
 doMovesBlind :: [Move] -> Position -> Position
-doMovesBlind = undefined
+doMovesBlind ms pos@Position{posBoard=board} = pos{posBoard=board//concat [ [(s,V),(d,board!s)]  | (s,d) <- ms] }
 
 finish :: Position -> Position
 finish pos = doAgentStep pos{posConflicts=S.empty}
 
 
 blocks :: Board -> Move -> [Coord]
-blocks = undefined
+blocks board mv = [ c | c <- spaces mv , board!c /= V ]
 
 spaces :: Move -> [Coord]
-spaces = undefined
+spaces (s,d) = let
+  (sx,sy) = toPair s
+  (dx,dy) = toPair d
+    in if | sx == dx -> let
+            l = min sy dy
+            r = max sy dy
+              in [fromPair (sx,y) | y <- [l..r] ]
+          | sy == dy -> let
+            l = min sx dx
+            r = max sx dx
+              in [fromPair (x,sy) | x <- [l..r] ]
+          | otherwise -> error "spaces called with illegal move"
+
+checkWin :: Position -> Maybe Result
+checkWin = undefined
 
 nearest :: Board -> Coord -> Axis -> (Piece,Int)
 nearest b (Coord c) a = let newidx = Coord $ c + fromPair a
