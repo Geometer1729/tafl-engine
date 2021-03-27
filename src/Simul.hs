@@ -16,12 +16,12 @@ type Vec = Array Int
 lMult :: Num a => Vec a -> Mat a -> Vec a
 lMult v m = let
   (_,(a,b)) = bounds m
-    in listArray (0,b) [ sum [ m!(i,j)*v!j | j <- [0..a-1]] | i <- [0..a-1] ]
+    in listArray (0,b) [ sum [ m!(i,j)*v!j | j <- [0..a]] | i <- [0..a] ]
 
 rMult :: Num a => Mat a -> Vec a -> Vec a
 rMult m v = let
   (_,(a,b)) = bounds m
-    in listArray (0,a) [ sum [ m!(i,j)*v!j | j <- [0..b-1]]   | i <- [0..a-1] ]
+    in listArray (0,a) [ sum [ m!(i,j)*v!j | j <- [0..b]]   | i <- [0..a] ]
 
 -- game -> optimal dist for 1,2
 solveGame :: Game -> WPs (Dist,Dist)
@@ -38,11 +38,22 @@ mwStep g (p1,p2) = asks epsilon >>= \ eps -> let
   b1 = bounds p1
   b2 = bounds p2
   -- playr 1 maximizes so the costs are negative for p1 and positive for p2
-  p1' = listArray b1 [ p1!i * (1-eps)**(- ct1!i) | i <- range b1 ]
-  p2' = listArray b2 [ p2!i * (1-eps)**(  ct2!i) | i <- range b2 ]
+  p1' = normalize $ listArray b1 [ p1!i * (1-eps)**(- ct1!i) | i <- range b1 ]
+  p2' = normalize $ listArray b2 [ p2!i * (1-eps)**(- ct2!i) | i <- range b2 ]
     in return (p1',p2')
 
+-- ideally normalizing would be done somewhat less often
 
+normalize :: Dist -> Dist
+normalize v = let
+  s = sum v
+    in fmap (/s) v
 
+-- test game
+soccer :: Game
+soccer = listArray ((0,0),(1,1)) [0,2,1,0]
+
+soccerSol :: (Dist,Dist)
+soccerSol = runReader (solveGame soccer) def
 
 
