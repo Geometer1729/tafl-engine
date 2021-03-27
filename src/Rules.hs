@@ -5,6 +5,7 @@ module Rules where
 import Board
 import Data.Bits
 import Data.Array
+import Data.Ord
 
 import qualified Data.Set as S
 
@@ -127,24 +128,100 @@ spaces (s,d) = let
 checkWin :: Position -> Maybe Result
 checkWin = undefined
 
-nearest :: Board -> Coord -> Axis -> (Piece,Int)
-nearest b (Coord c) a = let newidx = Coord $ c + fromPair a
-                in if not inRange (0,120) newidx
+nearest :: Board -> Coord -> Coord -> (Piece,Int)
+nearest b c dir = let c' = c + dir
+                   in if not $ inRange (0,120) c' || (getX c + getX dir /= getX c') -- detects wrap arounds which indicate board edges but don't leave range
                     then (V, -1)
-                    else case b ! newidx of
-                            V -> 1 + nearest b newidx a
+                    else case b ! c' of
+                            V -> let (t,d) = nearest b c' dir in (t,1+d)
                             W -> (W,1)
                             B -> (W,1)
                             A -> (A,1)
 
+up,down,right,left :: Coord
+up    = fromPair (0,1)
+down  = fromPair (0,-1)
+right = fromPair (1,0)
+left  = fromPair (-1,0)
+
 doAgentStep :: Position -> Position
 doAgentStep p = let a = posAgent p
                     b = posBoard p
-                    colUp = nearest b a (1,0)
-                    colDown = nearest b a (-1,0)
-                    rowUp = nearest b a (0,1)
-                    rowDown = nearest b a (0,-1)
-                    --find a repulsor
-                    if | fst colUp == B && fst colDown == W && snd colDown != 1 -> doMovesBlind [(a,a-11)] p
-                       | fst colDown == B && fstColUp == W && snd colUp != 1 -> doMovesBlind [(a,a+11)] p
-                       | 
+                    lookUp    = nearest b a up
+                    lookDown  = nearest b a down
+                    lookRight = nearest b a right
+                    lookLeft  = nearest b a left
+                    hPriority = genPriority lookLeft lookRight
+                    vPriority = genPriority lookDown lookUp
+                    vec = fromPriorities hPriority vPriority
+                    move = (a,a+vec)
+                      in doMovesBlind [move] p
+
+
+-- bool is true when the agent wants to move twoard the left argument
+-- if this row/column takes priority
+genPriority :: (Piece,Int) -> (Piece,Int) -> (Priority,Maybe Bool)
+genPriority (pl,dl) (pr,dr) = let
+    l = True
+    r = False
+                            in case (pl,pr) of
+                                (V,V) -> (VV   ,Nothing )
+                                (V,B) -> (BV dr,Just l)
+                                (V,W) -> (WV dr,Just r)
+                                (B,V) -> (BV dl,Just r)
+                                (B,B) -> (BB (min dl dr) (max dl dr), case compare dl dr of
+                                                                        LT -> Just r
+                                                                        EQ -> Nothing
+                                                                        GT -> Just l )
+                                (B,W) -> (BW dl dr,Just r)
+                                (W,V) -> (WV dl,Just l)
+                                (W,B) -> (BW dr dl,Just l)
+                                (W,W) -> (WW (min dl dr) (max dl dr), case compare dl dr of
+                                                                        LT -> Just l
+                                                                        EQ -> Nothing
+                                                                        GT -> Just r )
+                                (A,_) -> error "agent found agent"
+                                (_,A) -> error "agent found agent"
+
+
+fromPriorities :: (Priority,Maybe Bool) -> (Priority,Maybe Bool) -> Coord
+fromPriorities (ph,mhd) (pv,mvd) = case (mhd,mvd) of
+                                     (Nothing,Nothing) -> 0
+                                     (Just h ,Nothing) -> if h then left else right
+                                     (Nothing,Just  v) -> if v then down else up
+                                     (Just h ,Just  v) -> let
+                                                      hv = if h then left else right
+                                                      vv = if v then down else up
+                                                        in case compare ph pv of
+                                                              LT -> hv
+                                                              EQ -> vv --column rule
+                                                              GT -> vv
+
+
+data Priority =
+    BW Int Int
+  | BV Int
+  | BB Int Int
+  | WV Int
+  | WW Int Int
+  | VV
+    deriving(Read,Show,Eq)
+
+-- high priortiy < low priority
+-- makes the instance simpler by avoiding flips as low numbers corespond to higher priority
+instance Ord Priority where
+    compare (BW bl wl) (BW br wr) = compare (bl,wl) (br,wr)
+    compare (BW _ _ )  _          = LT
+    compare (BV l)     (BV r)     = compare l r
+    compare (BV l)     (BB rc rf) = compare (l,12) (rc,rf) -- 12 is basically infinite
+    compare (BV _)     _          = LT
+    compare (BB lc lf) (BB rc rf) = compare (lc,lf) (rc,rf)
+    compare (BB _ _)   _          = LT
+    compare (WV l)     (WV r)     = compare l r
+    compare (WV l)     (WW rc rf) = compare (l,12)  (rc,rf)
+    compare (WV _)     _          = LT
+    compare (WW lc lf) (WW rc rf) = compare (lc,lf) (rc,rf)
+    compare (WW _ _)   _          = LT
+    compare VV         VV         = EQ
+    compare l r = compare (Down r) (Down l)
+
