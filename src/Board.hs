@@ -40,21 +40,22 @@ showBoard p = let board = Data.Array.elems $ posBoard p
               in intercalate "\n" $ [[showPiece p | p <- row] | row <- chunksOf 11 board]
 
 startBoard :: Array Coord Piece 
-startBoard = array (0,120) $ zip [Coord c | c <- [0..120]] [
-        B, B, V, V, B, B, B, V, V, B, B,
-        V, V, V, W, B, B, B, W, V, V, V,
-        V, V, V, V, V, V, V, V, V, V, V,
-        V, V, V, V, V, V, V, V, V, V, V,
-        W, W, V, V, V, V, V, V, V, W, W,
-        B, B, V, V, V, A, V, V, V, B, B,
-        W, W, V, V, V, V, V, V, V, W, W,
-        V, V, V, V, V, V, V, V, V, V, V,
-        V, V, V, V, V, V, V, V, V, V, V,
-        V, V, V, W, B, B, B, W, V, V, V,
-        B, B, V, V, B, B, B, V, V, B, B]
+startBoard = array (0,120) $ zip [Coord c | c <- [0..120]] [B,V,V,V,W,B,W,V,V,V,B,B,V,V,V,W,B,W,V,V,V,B,V,V,V,V,V,V,V,V,V,V,V,V,W,V,V,V,V,V,V,V,W,V,B,B,V,V,V,V,V,V,V,B,B,B,B,V,V,V,A,V,V,V,B,B,B,B,V,V,V,V,V,V,V,B,B,V,W,V,V,V,V,V,V,V,W,V,V,V,V,V,V,V,V,V,V,V,V,B,V,V,V,W,B,W,V,V,V,B,B,V,V,V,W,B,W,V,V,V,B] {-[
+        B, B, V, V, B, B, B, V, V, B, B, --10
+        V, V, V, W, B, B, B, W, V, V, V, --21
+        V, V, V, V, V, V, V, V, V, V, V, --32
+        V, V, V, V, V, V, V, V, V, V, V, --43
+        W, W, V, V, V, V, V, V, V, W, W, --54
+        B, B, V, V, V, A, V, V, V, B, B, --65
+        W, W, V, V, V, V, V, V, V, W, W, --76
+        V, V, V, V, V, V, V, V, V, V, V, --87
+        V, V, V, V, V, V, V, V, V, V, V, --98
+        V, V, V, W, B, B, B, W, V, V, V, --109
+        B, B, V, V, B, B, B, V, V, B, B] --120
+-}
 
 startPosition :: Position
-startPosition = Position{posBoard = startBoard, posAgent=55,posConflicts=empty}
+startPosition = Position{posBoard = startBoard, posAgent=60,posConflicts=empty}
 
 instance Show Position where
     show = showBoard
