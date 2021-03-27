@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiWayIf #-}
+
 module Rules where
 
 import Board
@@ -101,5 +103,24 @@ blocks = undefined
 spaces :: Move -> [Coord]
 spaces = undefined
 
+nearest :: Board -> Coord -> Axis -> (Piece,Int)
+nearest b (Coord c) a = let newidx = Coord $ c + fromPair a
+                in if not inRange (0,120) newidx
+                    then (V, -1)
+                    else case b ! newidx of
+                            V -> 1 + nearest b newidx a
+                            W -> (W,1)
+                            B -> (W,1)
+                            A -> (A,1)
+
 doAgentStep :: Position -> Position
-doAgentStep = undefined
+doAgentStep p = let a = posAgent p
+                    b = posBoard p
+                    colUp = nearest b a (1,0)
+                    colDown = nearest b a (-1,0)
+                    rowUp = nearest b a (0,1)
+                    rowDown = nearest b a (0,-1)
+                    --find a repulsor
+                    if | fst colUp == B && fst colDown == W && snd colDown != 1 -> doMovesBlind [(a,a-11)] p
+                       | fst colDown == B && fstColUp == W && snd colUp != 1 -> doMovesBlind [(a,a+11)] p
+                       | 

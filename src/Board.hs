@@ -20,6 +20,7 @@ data Position = Position{
                   }
 
 type Move = (Coord,Coord)
+type Axis = (Coord,Coord)
 
 getX,getY :: Coord -> Int
 getX (Coord val) = val `mod` 11
