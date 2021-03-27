@@ -7,10 +7,12 @@ import Data.Set
 
 newtype Coord = Coord Int deriving(Eq,Ord,Num,Ix)
 
-data Piece = V | B | W | A deriving(Enum)
+data Piece = V | B | W | A deriving(Enum,Eq,Ord)
+
+type Board = Array Coord Piece
 
 data Position = Position{
-  posBoard :: Array Coord Piece,
+  posBoard :: Board,
   posAgent :: Coord,
   posConflicts :: Set Coord
                   }
