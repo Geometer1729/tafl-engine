@@ -210,17 +210,17 @@ data Priority =
 -- high priortiy < low priority
 -- makes the instance simpler by avoiding flips as low numbers corespond to higher priority
 instance Ord Priority where
-    compare (BW bl wl) (BW br wr) = compare (bl,wl) (br,wr)
+    compare (BW bl wl) (BW br wr) = compare (wl,bl) (wr,br)
     compare (BW _ _ )  _          = LT
     compare (BV l)     (BV r)     = compare l r
-    compare (BV l)     (BB rc rf) = compare (l,12) (rc,rf) -- 12 is basically infinite
+    compare (BV l)     (BB rc rf) = compare (l,Down 12) (rc,Down rf) -- 12 is basically infinite
     compare (BV _)     _          = LT
-    compare (BB lc lf) (BB rc rf) = compare (lc,lf) (rc,rf)
+    compare (BB lc lf) (BB rc rf) = compare (lc,Down lf) (rc,Down rf)
     compare (BB _ _)   _          = LT
     compare (WV l)     (WV r)     = compare l r
-    compare (WV l)     (WW rc rf) = compare (l,12)  (rc,rf)
+    compare (WV l)     (WW rc rf) = compare (l,Down 12)  (rc,Down rf)
     compare (WV _)     _          = LT
-    compare (WW lc lf) (WW rc rf) = compare (lc,lf) (rc,rf)
+    compare (WW lc lf) (WW rc rf) = compare (lc,Down lf) (rc,Down rf)
     compare (WW _ _)   _          = LT
     compare VV         VV         = EQ
     compare l r = compare (Down r) (Down l)
