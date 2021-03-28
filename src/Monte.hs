@@ -4,15 +4,20 @@ where
 
 import Board
 import Rules
+import Params
 import System.Random
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.Reader
 
 type Agent = Position -> IO [(Float,Move)]
 -- this should be moved to a more apropriate file once agents exist
 
-analizePos :: Int -> Int -> Agent -> Position -> IO Float
-analizePos games depth ag pos = score <$> runGames games depth pos ag
+analizePos :: Agent -> Position -> IOWP Float
+analizePos ag pos = do
+  games <- asks monteGames
+  depth <- asks monteDepth
+  lift $ score <$> runGames games depth pos ag
 
 fromVal :: (Ord n,Num n)=> n -> [(n,a)] -> a
 fromVal _ [] = error "val exceded sum of list probs"

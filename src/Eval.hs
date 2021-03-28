@@ -2,7 +2,9 @@ module Eval where
 
 import Board
 import Rules
+import Params
 import Data.Array
+import Control.Monad.Reader
 
 {-
 newtype Coord = Coord Int deriving(Eq,Ord,Num,Ix)
@@ -21,11 +23,16 @@ type Move = (Coord,Coord)
 l1 :: Coord -> Coord -> Int
 l1 c1 c2 = abs (getX c1 - getX c2) + abs (getY c1 - getY c2)
 
-positionEval :: Position -> Int -- Weights
-positionEval p = sum $ zipWith (*) [1,1,1] $ map ($ p) [agentEval,repulsorEval,attractorEval]
+positionEval :: Position -> WPs Int -- Weights
+positionEval p = do
+  ws <- asks evalWeights
+  ae <- agentEval p
+  return $ sum $ zipWith (*) ws [ae,repulsorEval p,attractorEval p]
 
-agentEval :: Position -> Int
-agentEval p = sum $ zipWith (*) [5,4..1] (map agentEval' $ iterate doAgentStep p)
+agentEval :: Position -> WPs Int
+agentEval p = do
+  ws <- asks agentWeights
+  return $ sum $ zipWith (*) ws (map agentEval' $ iterate doAgentStep p)
 
 agentEval' :: Position -> Int
 agentEval' p = let loc = posAgent p
@@ -53,7 +60,7 @@ attractorEval p = let board = posBoard p
                   in foldr accumulateAttractors 0 idx
 
 debugProduceHeatmap :: [Int]
-debugProduceHeatmap = [agentEval startPosition{posAgent=Coord i} | i <- [0..120]]
+debugProduceHeatmap = [agentEval' startPosition{posAgent=Coord i} | i <- [0..120]]
 
 heatmap :: Array Coord Int
 heatmap = array (0,120) $ zip [Coord c | c <- [0..120]] [10,9,8,7,6,5,6,7,8,9,10,9,8,7,6,5,4,5,6,7,8,9,8,7,6,5,4,3,4,5,6,7,8,7,6,5,4,3,2,3,4,5,6,7,6,5,4,3,2,1,2,3,4,5,6,0,0,0,0,0,0,0,0,0,0,0,-6,-5,-4,-3,-2,-1,-2,-3,-4,-5,-6,-7,-6,-5,-4,-3,-2,-3,-4,-5,-6,-7,-8,-7,-6,-5,-4,-3,-4,-5,-6,-7,-8,-9,-8,-7,-6,-5,-4,-5,-6,-7,-8,-9,-10,-9,-8,-7,-6,-5,-6,-7,-8,-9,-10]
