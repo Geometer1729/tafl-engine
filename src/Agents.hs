@@ -31,6 +31,22 @@ fromVal v ((x,a):xs)
    | v < x     = a
    | otherwise = fromVal (v-x) xs
 
+test :: Agent
+test pos =  do
+  solip1 <- withM $ solipCands pos
+  solip2 <- withM $ solipCands (posFlip pos)
+  lift $ putStrLn "solip1"
+  mapM_ (lift.print) solip1
+  lift $ putStrLn "solip2"
+  mapM_ (lift.print) solip2
+  evals  <- withM $ sequence [ fromIntegral <$> positionEval (doMoves m1 m2 pos) | m1 <- solip1 , m2 <- solip2 ]
+  lift $ putStrLn "evals"
+  mapM_ (lift.print) evals
+  let game = listArray ((0,0),(length solip1-1,length solip2-1)) evals
+  (d1,_) <- withM $ solveGame game
+  return $ zip (elems d1) solip1
+
+
 simple :: Agent
 simple pos = do
   solip1 <- withM $ solipCands pos
@@ -40,7 +56,7 @@ simple pos = do
   let ms1 = solip1 ++ res1
       ms2 = solip2 ++ res2
   evals <- withM $ sequence [ fromIntegral <$> positionEval (doMoves m1 m2 pos) | m1 <- ms1 , m2 <- ms2 ]
-  let game = listArray ((0,0),(length ms1,length ms2)) evals
+  let game = listArray ((0,0),(length ms1-1,length ms2-1)) evals
   (d1,_) <- withM $ solveGame game
   return $ zip (elems d1) ms1
 

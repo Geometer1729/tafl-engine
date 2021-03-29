@@ -131,7 +131,7 @@ checkWin = undefined
 
 nearest :: Board -> Coord -> Coord -> (Piece,Int)
 nearest b c dir = let c' = c + dir
-                   in if not $ inRange (0,120) c' || (getX c + getX dir /= getX c') -- detects wrap arounds which indicate board edges but don't leave range
+                   in if not $ inRange (0,120) c' && getX c + getX dir == getX c' -- detects wrap arounds which indicate board edges but don't leave range
                     then (V, -1)
                     else case b ! c' of
                             V -> let (t,d) = nearest b c' dir in (t,1+d)

@@ -37,6 +37,9 @@ toPair coord = (getX coord,getY coord)
 fromPair :: (Int,Int) -> Coord
 fromPair (x,y) = Coord $ y*11+x
 
+instance Show Piece where
+  show = return.showPiece
+
 showPiece :: Piece -> Char
 showPiece V = '.'
 showPiece B = 'B'
@@ -69,4 +72,6 @@ instance Show Position where
     show = showBoard
 
 posFlip :: Position -> Position
-posFlip = undefined
+posFlip pos = let
+  board = posBoard pos
+    in pos{posBoard=ixmap (0,120) (120 -) board}

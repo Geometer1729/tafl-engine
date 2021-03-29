@@ -1,7 +1,9 @@
 import Agents
 import Board
 
+import Control.Monad
+
 main :: IO ()
 main = do
-    mv1 <- playAgent simple startPosition
-    print mv1
+    mvs <- replicateM 100 $ playAgent simple startPosition
+    print mvs

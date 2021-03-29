@@ -17,20 +17,14 @@ analizePos :: Agent -> Position -> IOWP Float
 analizePos ag pos = do
   games <- asks monteGames
   depth <- asks monteDepth
-  lift $ score <$> runGames games depth pos ag
+  score <$> runGames games depth pos ag
 
-fromVal :: (Ord n,Num n)=> n -> [(n,a)] -> a
-fromVal _ [] = error "val exceded sum of list probs"
-fromVal v ((x,a):xs)
-   | v < x     = a
-   | otherwise = fromVal (v-x) xs
-
-runOneGame :: Int -> Position -> Agent -> IO Result
+runOneGame :: Int -> Position -> Agent -> IOWP Result
 runOneGame 0 _ _ = return Draw
 runOneGame maxDepth pos ag = do
-   val1 <- randomRIO (0,1) :: IO Float
+   val1 <- lift $ randomRIO (0,1)
    m1 <- ag pos
-   val2 <- randomRIO (0,1) :: IO Float
+   val2 <- lift $ randomRIO (0,1)
    m2 <- ag (posFlip pos)
    let mv1  = fromVal val1 m1
    let mv2  = fromVal val2 m2
@@ -40,18 +34,19 @@ runOneGame maxDepth pos ag = do
       Nothing  -> runOneGame (maxDepth -1) pos' ag
       Just res -> return res
 
-runGameMVar :: Int -> Position -> Agent -> IO (MVar Result)
+runGameMVar :: Int -> Position -> Agent -> IOWP (MVar Result)
 runGameMVar depth pos ag = do
-  mvar <- newEmptyMVar
-  _ <- forkIO $ do
-      res <- runOneGame depth pos ag
+  mvar <- lift newEmptyMVar
+  e <- ask
+  _ <- lift $ forkIO $ do
+      res <- runReaderT (runOneGame depth pos ag) e
       putMVar mvar res
   return mvar
 
-runGames :: Int -> Int -> Position -> Agent -> IO [Result]
+runGames :: Int -> Int -> Position -> Agent -> IOWP [Result]
 runGames games depth pos ag = do
   mvars <- replicateM games (runGameMVar depth pos ag)
-  mapM takeMVar mvars
+  lift $ mapM takeMVar mvars
 
 scoreRes :: Result -> Float
 scoreRes Win1 = 1
