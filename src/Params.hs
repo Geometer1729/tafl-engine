@@ -12,7 +12,8 @@ data Params = Params{
   monteDepth :: Int,
   agentWeights :: [Int],
   evalWeights :: [Int],
-  solipCandAmount :: Int
+  solipCandAmount :: Int,
+  simpleResCount :: Int
                     }
 
 def :: Params
@@ -23,5 +24,6 @@ def = Params{
   monteDepth = 200,
   agentWeights = [5,4,3,2,1],
   evalWeights  = [1,1,1],
-  solipCandAmount = 10
+  solipCandAmount = 10,
+  simpleResCount = 3
     }

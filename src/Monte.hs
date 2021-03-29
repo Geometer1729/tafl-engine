@@ -5,13 +5,13 @@ where
 import Board
 import Rules
 import Params
+import Agents
+
 import System.Random
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
 
-type Agent = Position -> IO [(Float,Move)]
--- this should be moved to a more apropriate file once agents exist
 
 analizePos :: Agent -> Position -> IOWP Float
 analizePos ag pos = do

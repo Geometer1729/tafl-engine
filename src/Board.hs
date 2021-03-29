@@ -6,8 +6,12 @@ import Data.Array
 import Data.Set
 import Data.List
 import Data.List.Split
+import Flow
 
 newtype Coord = Coord Int deriving(Eq,Ord,Num,Ix)
+
+instance Show Coord where
+  show = toPair.>show
 
 data Piece = V | B | W | A deriving(Enum,Eq,Ord)
 
