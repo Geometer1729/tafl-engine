@@ -104,6 +104,7 @@ data Block = None | Soft | Hard
 doMovesBlind :: [Move] -> Position -> Position
 doMovesBlind ms pos@Position{posBoard=board} = pos{posBoard=board//concat [ [(s,V),(d,board!s)]  | (s,d) <- ms] }
 
+
 finish :: Position -> Position
 finish pos = doAgentStep pos{posConflicts=S.empty}
 
