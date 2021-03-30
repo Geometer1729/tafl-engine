@@ -24,7 +24,7 @@ scaleGame game = let
 lMult :: Num a => Vec a -> Mat a -> Vec a
 lMult v m = let
   (_,(a,b)) = bounds m
-    in listArray (0,b) [ sum [ m!(i,j)*v!j | j <- [0..a]] | i <- [0..a] ]
+    in listArray (0,b) [ sum [ m!(j,i)*v!j | j <- [0..a]] | i <- [0..b] ]
 
 rMult :: Num a => Mat a -> Vec a -> Vec a
 rMult m v = let
@@ -61,6 +61,9 @@ normalize v = let
 -- test game
 soccer :: Game
 soccer = listArray ((0,0),(1,1)) [0,2,1,0]
+
+skewGame :: Game
+skewGame = listArray ((0,0),(2,1)) [0,1,1,0,0.5,0.5]
 
 soccerSol :: (Dist,Dist)
 soccerSol = runReader (solveGame soccer) def
