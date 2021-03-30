@@ -5,26 +5,26 @@ where
 import Board
 import Rules
 import Params
-import Agents
+import RunAgents
+import Eval
 
 import System.Random
-import Control.Concurrent
-import Control.Monad
 import Control.Monad.Reader
+import Control.Monad.State
 
 
-analizePos :: Agent -> Position -> IOWP Float
+analizePos :: Agent -> Position -> RWP Float
 analizePos ag pos = do
   games <- asks monteGames
   depth <- asks monteDepth
-  score <$> runGames games depth pos ag
+  sum <$> runGames games depth pos ag
 
-runOneGame :: Int -> Position -> Agent -> IOWP Result
-runOneGame 0 _ _ = return Draw
+runOneGame :: Int -> Position -> Agent -> RWP Float
+runOneGame 0 pos _ = reader . runReader $ fromIntegral <$> positionEval pos
 runOneGame maxDepth pos ag = do
-   val1 <- lift $ randomRIO (0,1)
+   val1 <- state $ randomR (0,1)
    m1 <- ag pos
-   val2 <- lift $ randomRIO (0,1)
+   val2 <- state $ randomR (0,1)
    m2 <- ag (posFlip pos)
    let mv1  = fromVal val1 m1
    let mv2  = fromVal val2 m2
@@ -32,27 +32,13 @@ runOneGame maxDepth pos ag = do
    let mres  = checkWin pos'
    case mres of
       Nothing  -> runOneGame (maxDepth -1) pos' ag
-      Just res -> return res
+      Just res -> scoreRes pos res
 
-runGameMVar :: Int -> Position -> Agent -> IOWP (MVar Result)
-runGameMVar depth pos ag = do
-  mvar <- lift newEmptyMVar
-  e <- ask
-  _ <- lift $ forkIO $ do
-      res <- runReaderT (runOneGame depth pos ag) e
-      putMVar mvar res
-  return mvar
+runGames :: Int -> Int -> Position -> Agent -> RWP [Float]
+runGames games depth pos ag = replicateM games (runOneGame depth pos ag)
 
-runGames :: Int -> Int -> Position -> Agent -> IOWP [Result]
-runGames games depth pos ag = do
-  mvars <- replicateM games (runGameMVar depth pos ag)
-  lift $ mapM takeMVar mvars
-
-scoreRes :: Result -> Float
-scoreRes Win1 = 1
-scoreRes Win2 = -1
-scoreRes Draw = 0
-
-score :: [Result] -> Float
-score ress = sum (map scoreRes ress) / fromIntegral (length ress)
+scoreRes :: Position -> Result -> RWP Float
+scoreRes _ Win1 = asks winEval
+scoreRes _ Win2 = asks (negate.winEval)
+scoreRes pos Draw = lift $ fromIntegral <$> positionEval pos
 

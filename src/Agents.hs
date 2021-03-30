@@ -7,55 +7,47 @@ import ResponseSimple
 import Simul
 import Eval
 import Rules
+import Monte
 
 import Control.Monad
+import Control.Parallel.Strategies
 import Control.Monad.Reader
 import Data.Array
 import System.Random
+import Control.Monad.State
 
-type Agent = Position -> IOWP  [(Float,Move)]
+rwpPar :: [RWP a ] -> RWP [a]
+rwpPar xs = StateT $ \g -> reader $ \e -> let
+  (g1,g2) = split g
+  gens = map mkStdGen (randoms g1)
+  ys = [ fst $ runReader (runStateT x g') e | (x,g') <- zip xs gens ] `using` parList rpar
+    in (ys,g2)
 
 withM :: MonadReader r m => Reader r a -> m a
 withM = reader.runReader
 
-playAgent :: Agent -> Position -> IO Move
-playAgent ag pos = do
-  dist <- runReaderT (ag pos) def
-  ix   <- randomRIO (0,1)
-  let mv = fromVal ix dist
-  return mv
-
-fromVal :: (Ord n,Num n)=> n -> [(n,a)] -> a
-fromVal _ [] = error "val exceded sum of list probs"
-fromVal v ((x,a):xs)
-   | v < x     = a
-   | otherwise = fromVal (v-x) xs
-
-test :: Agent
-test pos =  do
+simpleCands :: Position -> RWP ([Move],[Move])
+simpleCands pos = do
   solip1 <- withM $ solipCands pos
-  solip2 <- withM $ solipCands (posFlip pos)
-  lift $ putStrLn "solip1"
-  mapM_ (lift.print) solip1
-  lift $ putStrLn "solip2"
-  mapM_ (lift.print) solip2
-  evals  <- withM $ sequence [ fromIntegral <$> positionEval (doMoves m1 m2 pos) | m1 <- solip1 , m2 <- solip2 ]
-  lift $ putStrLn "evals"
-  mapM_ (lift.print) evals
-  let game = listArray ((0,0),(length solip1-1,length solip2-1)) evals
-  (d1,_) <- withM $ solveGame game
-  return $ zip (elems d1) solip1
-
+  solip2 <- withM $ map moveFlip <$> solipCands (posFlip pos)
+  res1   <- withM $ concat <$> forM solip2 (simpleResponses pos)
+  res2   <- withM $ map moveFlip . concat <$> forM solip1 (simpleResponses (posFlip pos))
+  let ms1 = solip1 ++ res1
+      ms2 = solip2 ++ res2
+  return (ms1,ms2)
 
 simple :: Agent
 simple pos = do
-  solip1 <- withM $ solipCands pos
-  solip2 <- withM $ solipCands (posFlip pos)
-  res1   <- withM $ concat <$> forM solip2 (simpleResponses pos)
-  res2   <- withM $ concat <$> forM solip1 (simpleResponses pos)
-  let ms1 = solip1 ++ res1
-      ms2 = solip2 ++ res2
-  evals <- withM $ sequence [ fromIntegral <$> positionEval (doMoves m1 m2 pos) | m1 <- ms1 , m2 <- ms2 ]
+  (ms1,ms2) <- simpleCands pos
+  evals <- withM $ mapM (fmap fromIntegral.positionEval) [ doMoves m1 m2 pos | m1 <- ms1 , m2 <- ms2 ]
+  let game = listArray ((0,0),(length ms1-1,length ms2-1)) evals
+  (d1,_) <- withM $ solveGame game
+  return $ zip (elems d1) ms1
+
+monteSimple :: Agent
+monteSimple pos = do
+  (ms1,ms2) <- simpleCands pos
+  evals <- rwpPar [ analizePos simple $ doMoves m1 m2 pos | m1 <- ms1 , m2 <- ms2 ]
   let game = listArray ((0,0),(length ms1-1,length ms2-1)) evals
   (d1,_) <- withM $ solveGame game
   return $ zip (elems d1) ms1

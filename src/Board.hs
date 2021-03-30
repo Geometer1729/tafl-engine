@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# Language GeneralizedNewtypeDeriving #-}
 
 module Board where
 
@@ -75,3 +75,7 @@ posFlip :: Position -> Position
 posFlip pos = let
   board = posBoard pos
     in pos{posBoard=ixmap (0,120) (120 -) board}
+
+moveFlip :: Move -> Move
+moveFlip (src,dest) = (120-src,120-dest)
+

@@ -26,7 +26,7 @@ genDir pos src vec = let
     in [(src,src+i*vec) | i <- fromIntegral <$> [1..d-1] ]
 
 doMove :: Move -> Position -> Position
-doMove mv pos = finish $ doMovesBlind [mv] pos
+doMove mv = doMovesBlind [mv]
 
 solipCands :: Position -> WPs [Move]
 solipCands pos = do

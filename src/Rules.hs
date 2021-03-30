@@ -127,7 +127,12 @@ spaces (s,d) = let
           | otherwise -> error "spaces called with illegal move"
 
 checkWin :: Position -> Maybe Result
-checkWin = undefined
+checkWin pos = case posAgent pos of
+                 0   -> Just Win1
+                 10  -> Just Win1
+                 110 -> Just Win2
+                 120 -> Just Win2
+                 _   -> Nothing
 
 nearest :: Board -> Coord -> Coord -> (Piece,Int)
 nearest b c dir = let c' = c + dir
@@ -181,8 +186,9 @@ genPriority (pl,dl) (pr,dr) = let
                                                                         LT -> Just l
                                                                         EQ -> Nothing
                                                                         GT -> Just r )
-                                (A,_) -> error "agent found agent"
-                                (_,A) -> error "agent found agent"
+                                (A,A) -> error "agent found agent both"
+                                (A,_) -> error "agent found agent left/down"
+                                (_,A) -> error "agent found agent right/up"
 
 
 fromPriorities :: (Priority,Maybe Bool) -> (Priority,Maybe Bool) -> Coord
