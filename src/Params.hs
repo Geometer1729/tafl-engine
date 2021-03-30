@@ -26,9 +26,9 @@ data Params = Params{
 
 def :: Params
 def = Params{
-  epsilon = 0.5,
-  mwItters = 5,
-  monteGames = 50,
+  epsilon = 0.1,
+  mwItters = 15,
+  monteGames = 10,
   monteDepth = 5,
   agentWeights = [5,4,3,2,1],
   evalWeights  = [1,1,1],
