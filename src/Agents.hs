@@ -15,6 +15,7 @@ import Control.Monad.Reader
 import Data.Array
 import System.Random
 import Control.Monad.State
+import Data.List
 
 rwpPar :: [RWP a ] -> RWP [a]
 rwpPar xs = StateT $ \g -> reader $ \e -> let
@@ -26,14 +27,17 @@ rwpPar xs = StateT $ \g -> reader $ \e -> let
 withM :: MonadReader r m => Reader r a -> m a
 withM = reader.runReader
 
+unique :: Ord a => [a] -> [a]
+unique = map head . group . sort
+
 simpleCands :: Position -> RWP ([Move],[Move])
 simpleCands pos = do
   solip1 <- withM $ solipCands pos
   solip2 <- withM $ map moveFlip <$> solipCands (posFlip pos)
   res1   <- withM $ concat <$> forM solip2 (simpleResponses pos)
   res2   <- withM $ map moveFlip . concat <$> forM solip1 (simpleResponses (posFlip pos))
-  let ms1 = solip1 ++ res1
-      ms2 = solip2 ++ res2
+  let ms1 = unique $ solip1 ++ res1
+      ms2 = unique $ solip2 ++ res2
   return (ms1,ms2)
 
 simple :: Agent

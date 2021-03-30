@@ -41,6 +41,14 @@ agentEval' p = let loc = posAgent p
 --              else -10 + min (l1 (Coord 110) loc) (l1 (Coord 120) loc)
               in heatmap ! loc
 
+  {-
+    it would probably be better if repulsor and atractor eval
+    looked at the position of the agent more
+    ie repulsors are bad if they are between you and the nearest corner
+    attractors are good between you and the corner unless you're really close
+    etc
+    -}
+
 repulsorEval :: Position -> Int
 repulsorEval p = let board = posBoard p
                      idx = indices board
