@@ -6,9 +6,10 @@ import Data.Array
 import Data.Set
 import Data.List
 import Data.List.Split
+import Data.Tuple
 import Flow
 
-newtype Coord = Coord Int deriving(Eq,Ord,Num,Ix)
+newtype Coord = Coord Int deriving(Eq,Ord,Num,Ix,Enum,Real,Integral)
 
 instance Show Coord where
   show = toPair.>show
@@ -28,11 +29,11 @@ data Position = Position{
 type Move = (Coord,Coord)
 
 getX,getY :: Coord -> Int
-getX (Coord val) = val `mod` 11
-getY (Coord val) = val `div` 11
+getX = fst . toPair
+getY = snd . toPair
 
 toPair :: Coord -> (Int,Int)
-toPair coord = (getX coord,getY coord)
+toPair (Coord c) = swap $ divMod c 11
 
 fromPair :: (Int,Int) -> Coord
 fromPair (x,y) = Coord $ y*11+x

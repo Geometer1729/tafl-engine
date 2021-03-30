@@ -21,7 +21,10 @@ type Move = (Coord,Coord)
 -}
 
 l1 :: Coord -> Coord -> Int
-l1 c1 c2 = abs (getX c1 - getX c2) + abs (getY c1 - getY c2)
+l1 c1 c2 = let
+  (x1,y1) = toPair c1
+  (x2,y2) = toPair c2
+    in abs (x1-x2) + abs (y1-y2)
 
 positionEval :: Position -> WPs Int -- Weights
 positionEval p = do
