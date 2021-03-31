@@ -43,7 +43,14 @@ occupied :: Board -> Coord -> Bool
 occupied board coord = board!coord /= V
 
 doMoves :: Move -> Move -> Position -> Position
-doMoves mv1 mv2 pos@Position{posBoard=board} = case findConflict mv1 mv2 of
+doMoves m1 m2 p = let
+  p' = doMoves' m1 m2 p
+    in if | validateAgent p' -> p'
+          | validateAgent p  -> error $ "doMoves broke the agent\n"    ++ show (m1,m2,p,posAgent p)
+          | otherwise        -> error $ "doMoves got the agent broken" ++ show (m1,m2,p,posAgent p)
+
+doMoves' :: Move -> Move -> Position -> Position
+doMoves' mv1 mv2 pos@Position{posBoard=board} = case findConflict mv1 mv2 of
                         Just conf -> pos{posConflicts= S.insert conf (posConflicts pos)}
                         Nothing   -> case checkTransitive mv1 mv2 of
                                        Just (s,m,d) -> let
@@ -160,12 +167,13 @@ doAgentStep p = let a = posAgent p
                     hPriority = genPriority lookLeft lookRight
                     vPriority = genPriority lookDown lookUp
                     vec = fromPriorities hPriority vPriority
-                    move = (a,a+vec)
+                    dest = a+vec
+                    move = (a,dest)
+                    final = doMovesBlind [move] p{posAgent=dest}
                       -- debug tool
-                      in if A `elem` map fst [lookUp,lookRight,lookDown,lookLeft]
-                            then error $ "aggent error with agent pos:" ++ show (posAgent p) ++ "\n" ++ showBoard p
-                            else doMovesBlind [move] p{posAgent=a+vec}
-
+                      in if | not $ validateAgent p     -> error "doAgentStep got the agent broken"
+                            | not $ validateAgent final -> error "doAgentStep got a valid agent and broke it"
+                            | otherwise                 -> final
 
 -- bool is true when the agent wants to move twoard the left argument
 -- if this row/column takes priority

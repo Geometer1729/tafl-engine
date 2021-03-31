@@ -26,10 +26,21 @@ genDir pos src vec = let
     in [(src,src+i*vec) | i <- fromIntegral <$> [1..d-1] ]
 
 doMove :: Move -> Position -> Position
-doMove mv = doMovesBlind [mv]
+doMove mv pos = let
+  pos' = doMovesBlind [mv] pos
+                         in if not (validateAgent pos)
+                           then error "doMove given bad agent"
+                           else if not (validateAgent pos')
+                               then error "doMove broke the agent"
+                               else pos'
+
+--doMove :: Move -> Position -> Position
+--doMove mv = doMovesBlind [mv]
 
 solipCands :: Position -> WPs [Move]
-solipCands pos = do
+solipCands pos = if not (validateAgent pos)
+                    then error "solip cands given bad agent"
+                    else do
   candCount   <- asks solipCandAmount
   let cands = directMoves pos
   scores <- mapM (\mv -> positionEval $ doMove mv pos) cands

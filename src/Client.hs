@@ -20,6 +20,7 @@ import Data.ByteString.Lazy (fromStrict)
 import Data.Aeson
 
 import Data.Maybe (fromJust)
+import Data.Bits
 
 import Board
 import RunAgents
@@ -39,9 +40,7 @@ data StateMsg = StateMsg {
 
 instance FromJSON StateMsg
 
-type NewTurn = Maybe Coord
--- nothing represents turn over
--- Just coord represents conflict at coord
+data NewTurn = NewTurn
 
 parseMsg :: Text -> Maybe (Either Position NewTurn)
 parseMsg t = let
@@ -49,18 +48,20 @@ parseMsg t = let
     maybeStateMsg = decode responseByteString :: Maybe StateMsg
       in case maybeStateMsg of
            Just stateMsg -> let
-              boardArray = array (0,120) $ zip [0..120] (map (toEnum . (`mod` 16) :: Int -> Piece) . concat . transpose . columns $ stateMsg)
+              intArray = listArray (0,120) (concat . transpose . columns $ stateMsg)
+              boardArray = fmap (toEnum . (`mod` 16) :: Int -> Piece) intArray
+              conflicts =  S.fromList [ c | (c,x) <- assocs intArray , x .|. 0x10 /= 0 ]
               agentPos = fst $ fromJust $ find ((== A) . snd) $ assocs boardArray
-                in Just $ Left Position{posBoard=boardArray,posAgent=agentPos,posConflicts=S.empty}
+              pos = Position{posBoard=boardArray,posAgent=agentPos,posConflicts=conflicts}
+                in if validateAgent pos
+                      then Just $ Left pos
+                      else error "invalid agent in parseMsg"
            Nothing -> do
               jsonMap <- decode responseByteString :: Maybe Object
               k <- H.lookup "kind" jsonMap
               case k of
-                  String "TURN_OVER" -> Just (Right Nothing)
-                  String "CONFLICT"  -> do
-                    sq <- H.lookup "square" jsonMap
-                    let Success [x,y] = fromJSON sq
-                    return (Right (Just $ fromPair (x,y)))
+                  String "TURN_OVER" -> Just (Right NewTurn)
+                  String "CONFLICT"  -> Just (Right NewTurn)
                   _ -> Nothing
 
 
@@ -76,13 +77,7 @@ handleMessage (Left posNew) = do
        put (posNew,mvar)
        lift $ putMVar mvar posOld
      else put (posNew,mvar)
-handleMessage (Right (Just conf)) = do
-  (posOld,mvar) <- get
-  let confsOld = posConflicts posOld
-      confsNew = S.insert conf confsOld
-      posNew = posOld{posConflicts=confsNew}
-  lift $ putMVar mvar posNew
-handleMessage (Right Nothing) = do
+handleMessage (Right NewTurn) = do
   (pos,mvar) <- get
   lift $ putMVar mvar pos
 

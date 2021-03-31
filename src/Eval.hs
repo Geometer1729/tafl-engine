@@ -30,7 +30,9 @@ positionEval :: Position -> WPs Int -- Weights
 positionEval p = do
   ws <- asks evalWeights
   ae <- agentEval p
-  return $ sum $ zipWith (*) ws [ae,repulsorEval p,attractorEval p]
+  if validateAgent p
+    then return $ sum $ zipWith (*) ws [ae,repulsorEval p,attractorEval p]
+    else error "position eval called with broken agent"
 
 agentEval :: Position -> WPs Int
 agentEval p = do

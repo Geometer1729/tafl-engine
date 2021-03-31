@@ -7,6 +7,7 @@ import Data.Set
 import Data.List
 import Data.List.Split
 import Data.Tuple
+import Data.Bits
 import Flow
 
 newtype Coord = Coord Int deriving(Eq,Ord,Num,Ix,Enum,Real,Integral)
@@ -75,8 +76,11 @@ instance Show Position where
 posFlip :: Position -> Position
 posFlip pos = let
   board = posBoard pos
-    in pos{posBoard=ixmap (0,120) (120 -) board}
+  ag = posAgent pos
+               in pos{posBoard=ixmap (0,120) (120 -) board,posAgent = 120-ag }
 
 moveFlip :: Move -> Move
 moveFlip (src,dest) = (120-src,120-dest)
 
+validateAgent :: Position -> Bool
+validateAgent Position{posBoard=board,posAgent=ag} = and [ (board!c /= A) `xor` (c == ag) | c <- [1..120] ]
