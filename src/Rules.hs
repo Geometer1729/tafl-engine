@@ -161,7 +161,10 @@ doAgentStep p = let a = posAgent p
                     vPriority = genPriority lookDown lookUp
                     vec = fromPriorities hPriority vPriority
                     move = (a,a+vec)
-                      in doMovesBlind [move] p{posAgent=a+vec}
+                      -- debug tool
+                      in if A `elem` map fst [lookUp,lookRight,lookDown,lookLeft]
+                            then error $ "aggent error with agent pos:" ++ show (posAgent p) ++ "\n" ++ showBoard p
+                            else doMovesBlind [move] p{posAgent=a+vec}
 
 
 -- bool is true when the agent wants to move twoard the left argument

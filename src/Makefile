@@ -1,10 +1,10 @@
 install: build
 
 build:
-	ghc -O2 -dynamic -threaded -Wall -j16 Tests
+	stack ghc -- -O2 -threaded -Wall -j16 Client
 
 clean:
 	rm *.hi *.o
 
 run:
-	./Tests +RTS -N24
+	./Client +RTS -N24

@@ -14,7 +14,7 @@ newtype Coord = Coord Int deriving(Eq,Ord,Num,Ix,Enum,Real,Integral)
 instance Show Coord where
   show = toPair.>show
 
-data Piece = V | B | W | A deriving(Enum,Eq,Ord)
+data Piece = V | W | B | A deriving(Enum,Eq,Ord)
 
 type Board = Array Coord Piece
 
@@ -24,7 +24,7 @@ data Position = Position{
   posBoard :: Board,
   posAgent :: Coord,
   posConflicts :: Set Coord
-                  }
+                  } deriving(Eq,Ord)
 
 type Move = (Coord,Coord)
 
