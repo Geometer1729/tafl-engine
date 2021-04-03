@@ -97,7 +97,7 @@ testCli conn = do
     _ <- forkIO $ void $ forever $ do
         pos <- takeMVar posMVar
         print ("calling agent" :: String)
-        (src,dest) <- playAgent monteSimple pos
+        (src,dest) <- playAgent simple pos
         let (x1,y1) = toPair src
             (x2,y2) = toPair dest
         WS.sendTextData conn ("move " <> T.pack (unwords (map show [x1,y1,x2,y2])) <> "\n")
