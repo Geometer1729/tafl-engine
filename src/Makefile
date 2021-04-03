@@ -6,5 +6,5 @@ build:
 clean:
 	rm *.hi *.o
 
-run:
+run: build
 	./Client +RTS -N24

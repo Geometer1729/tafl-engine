@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Solipsist where
 
 import Board
@@ -11,9 +12,16 @@ import Data.Ord
 import Flow
 
 directMoves :: Position -> [Move]
-directMoves pos = do
-   src <- [ coord | (coord,piece) <- assocs (posBoard pos) , piece `elem` [B,W] ]
-   movesFrom pos src
+directMoves pos = let
+  ms = directMoves' pos
+                   in if null [ () | (src,_) <- ms , src == posAgent pos ]
+                         then ms
+                         else error "directMoves generated a bad move"
+
+directMoves' :: Position -> [Move]
+directMoves' pos = do
+  src <- [ src | (src,piece) <- assocs (posBoard pos) , piece `elem` [B,W] , src /= posAgent pos ]
+  movesFrom pos src
 
 movesFrom :: Position -> Coord -> [Move]
 movesFrom pos src = do
@@ -22,8 +30,23 @@ movesFrom pos src = do
 
 genDir :: Position -> Coord -> Coord -> [Move]
 genDir pos src vec = let
+  board = posBoard pos
+  dests = takeWhile (\dest -> board!dest == V)  $ do
+      i <- [1..10]
+      let dest = src+i*vec
+      guard $ inRange (0,120) dest
+      guard $ getX src + getX (i*vec) == getX dest
+      return dest
+  in map (src,) dests
+
+
+
+  {-
+genDir :: Position -> Coord -> Coord -> [Move]
+genDir pos src vec = let
   (_,d) = nearest (posBoard pos) src vec
     in [(src,src+i*vec) | i <- fromIntegral <$> [1..d-1] ]
+    -}
 
 doMove :: Move -> Position -> Position
 doMove mv pos = let
@@ -31,7 +54,7 @@ doMove mv pos = let
                          in if not (validateAgent pos)
                            then error "doMove given bad agent"
                            else if not (validateAgent pos')
-                               then error "doMove broke the agent"
+                               then error $ "doMove broke the agent\n" ++ show  mv ++ "\n" ++ showBoard pos ++ "\n" ++ show (posAgent pos)
                                else pos'
 
 --doMove :: Move -> Position -> Position
