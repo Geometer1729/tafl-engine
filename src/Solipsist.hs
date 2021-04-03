@@ -29,13 +29,26 @@ movesFrom pos src = do
     genDir pos src dir
 
 genDir :: Position -> Coord -> Coord -> [Move]
-genDir pos src vec = let
+genDir p c1 c2 = let
+  ms = genDir' p c1 c2
+  valid =  and $ do
+        (src,dest) <- ms
+        let (x1,y1) = toPair src
+            (x2,y2) = toPair dest
+        return $ x1 == x2 || y1 == y2
+    in if valid
+          then ms
+          else error $ "genDir doesn't work" ++ show c2
+
+
+genDir' :: Position -> Coord -> Coord -> [Move]
+genDir' pos src vec = let
   board = posBoard pos
   dests = takeWhile (\dest -> board!dest == V)  $ do
       i <- [1..10]
       let dest = src+i*vec
       guard $ inRange (0,120) dest
-      guard $ getX src + getX (i*vec) == getX dest
+      guard $ getX src + getX (i*vec) == getX dest -- this check doesn't work
       return dest
   in map (src,) dests
 

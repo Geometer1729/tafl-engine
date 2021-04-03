@@ -34,7 +34,7 @@ getX = fst . toPair
 getY = snd . toPair
 
 toPair :: Coord -> (Int,Int)
-toPair (Coord c) = swap $ divMod c 11
+toPair (Coord c) = swap $ quotRem c 11
 
 fromPair :: (Int,Int) -> Coord
 fromPair (x,y) = Coord $ y*11+x

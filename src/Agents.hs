@@ -35,7 +35,7 @@ simpleCands pos = do
   solip1 <- withM $ solipCands pos
   solip2 <- withM $ map moveFlip <$> solipCands (posFlip pos)
   res1   <- withM $ concat <$> forM solip2 (simpleResponses pos)
-  res2   <- withM $ map moveFlip . concat <$> forM solip1 (simpleResponses (posFlip pos))
+  res2   <- withM $ map moveFlip . concat <$> forM (map moveFlip solip1) (simpleResponses (posFlip pos))
   let ms1 = unique $ solip1 ++ res1
       ms2 = unique $ solip2 ++ res2
   return (ms1,ms2)
