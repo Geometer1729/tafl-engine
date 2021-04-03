@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+module Client where
 
 import GHC.Generics
 
@@ -108,7 +109,5 @@ testCli conn = do
         putStrLn "sent stuff"
     WS.sendClose conn T.empty
 
-
-
-main :: IO ()
-main = withSocketsDo $ WS.runClient "automatafl.cslabs.clarkson.edu" 8080 "/" testCli
+client :: IO ()
+client = withSocketsDo $ WS.runClient "automatafl.cslabs.clarkson.edu" 8080 "/" testCli

@@ -1,0 +1,41 @@
+name:                tafl-engine
+version:             0.1.0.0
+github: "Geometer1729/tafl-engine"
+license: GPL3
+
+description:         Please see the README on GitHub at <https://github.com/Geometer1729/tafl-engine#readme>
+
+extra-source-files:
+- README.md
+
+dependencies:
+- aeson
+- array
+- base
+- bytestring
+- containers
+- flow
+- mtl
+- network
+- parallel
+- random
+- split
+- text
+- unordered-containers
+- websockets
+
+library:
+  source-dirs: src
+
+executables:
+  client-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    - -Wall
+    dependencies:
+    - tafl-engine
